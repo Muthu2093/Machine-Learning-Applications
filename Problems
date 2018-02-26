@@ -1,0 +1,17 @@
+ 	 Problem 1:
+     
+     This problem deals with linear regression. Consider the following data set, the input variable (first column) indicates the amount spent by an individual on internet service and the output variable (second column) indicates the degree of satisfaction with his/her internet service.
+Time Spent	Satisfaction Degree
+11	6
+18	8
+17	10
+15	4
+9	9
+5	6
+12	3
+19	5
+22	2
+25	10
+We are interested in choosing the best weight vector among four candidates. The fourth candidate (w4) uses higher-order features - <1,x,x2>. For all others we assume that first component of the weight vector corresponds to the bias/intercept term. We assume that the variance for each y is same (0.01) for all choices of the weights. We assume a Gaussian prior on the weight vectors with 0 mean and a diagonal covariance matrix with 0.01 at every diagonal entry.
+
+
