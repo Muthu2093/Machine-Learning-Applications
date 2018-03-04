@@ -66,28 +66,49 @@ def qdaLearn(X,y):
             mu = sum (classElem[0,:])
             mu = mu/np.shape (classElem)[1]
             mean[j,i] = mu
-    
-        for k in range (0,np.shape(X)[1]):
-            MEAN=sum(X[:,k])/np.shape(X)[0]
-            squareDiff = (X[:,k] - MEAN) * np.transpose((X[:,k] - MEAN))
-            temp[k,k] = sum(squareDiff[:])/np.shape(X)[0]  
-            coVariance[i]=temp
+        
+        ## Calulating covariance
+        nu = np.matlib.repmat(mu,len(X),1)
+        D = np.matmul(np.transpose(X-nu),(X - nu))
+        D = D/len(X)
+        coVariance[i]=D
             
     return mean,coVariance
 
 def ldaTest(means,covmat,Xtest,ytest):
-    # Inputs
-    # means, covmat - parameters of the LDA model
-    # Xtest - a N x d matrix with each row corresponding to a test example
-    # ytest - a N x 1 column vector indicating the labels for each test example
-    # Outputs
-    # acc - A scalar accuracy value
-    # ypred - N x 1 column vector indicating the predicted labels
+    c = np.hstack((Xtest,ytest))  
+    classes, count = np.unique(ytest[:,0], return_counts = True)
+    theta = np.zeros ((len(classes)))
+    label = np.zeros(np.shape(ytest))
+    acc = np.zeros(np.shape(ytest))
+    D = np.zeros((len(classes)))
 
-    # IMPLEMENT THIS METHOD
+    ## Calculating theta(y=1) for test data - all classes
+    for i in range (0,1):#len(classes)):
+        theta[i] = count[i]/len(ytest)
+        
+        for i in range (0,len(ytest)):    
+            X = np.matlib.repmat(Xtest[i,:],len(classes),1)    
+            nu = np.zeros(np.shape(X))
+            #m = mean[:,i]
+            #nu = np.matlib.repmat(m,len(X),1)
+            nu = np.transpose(means)
+            sigma = inv(covmat)
+            D =  np.matmul(np.matmul((X - nu),sigma),np.transpose(X-nu)) #covmat - change variable name
+            pdf = np.amin(np.diagonal(D))
+            l= np.where(np.diagonal(D) == pdf)
+            label[i]=classes[l]
+            if label[i] == ytest[i]:
+                acc[i] = 1
+            else:
+                    acc[i] = 0
+            print(i)
+            
+        unique, counts = np.unique(acc, return_counts=True)
+        acc=counts[1]/len(acc)*100
     
     
-    return acc,ypred
+    return acc,label
 
 def qdaTest(means,covmats,Xtest,ytest):
     # Inputs

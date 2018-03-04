@@ -24,8 +24,9 @@ else:
 
 c=np.hstack((X,y))    
 UE  = np.unique (y[:,0])
-mean = np.zeros ((np.shape(X)[1], len(UE))) #initializing mean matrix
-coVariance = np.zeros ((np.shape(X)[1], np.shape(X)[1])) #initialzing covariance matrix
+mean = np.zeros ((np.shape(X)[1], len(UE)))
+coVariance = [0]* len(UE)
+temp = np.zeros ((np.shape(X)[1], np.shape(X)[1]))
     
     ## Calculation of mean
 for i in range (0,len(UE)):
@@ -37,12 +38,12 @@ for i in range (0,len(UE)):
         mean[j,i] = mu
         
     ## Calculation of covariance matrix
-    for i in range (0,np.shape(X)[1]):
-        MEAN=sum(X[:,i])/np.shape(X)[0]
-        squareDiff = (X[:,i] - MEAN) * np.transpose((X[:,i] - MEAN))
-        coVariance[i,i] = sum(squareDiff[:])/np.shape(X)[0]
+    nu = np.matlib.repmat(mu,len(X),1)
+    D = np.matmul(np.transpose(X-nu),(X - nu))
+    D = D/len(X)
+    coVariance[i]=D
     
-del i,j,elemIndices,mu,squareDiff,classElem, pi,X,y,c
+#del i,j,elemIndices,mu,squareDiff,classElem, pi,X,y,c
 
 
         
