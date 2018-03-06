@@ -34,10 +34,16 @@ def ldaLearn(X,y):
             mean[j,i] = mu
         
     ## Calculation of covariance matrix
-    for i in range (0,np.shape(X)[1]):
-        MEAN=sum(X[:,i])/np.shape(X)[0]
-        squareDiff = (X[:,i] - MEAN) * np.transpose((X[:,i] - MEAN))
-        coVariance[i,i] = sum(squareDiff[:])/np.shape(X)[0]
+    #for i in range (0,np.shape(X)[1]):
+     #   MEAN=sum(X[:,i])/np.shape(X)[0]
+      #  squareDiff = (X[:,i] - MEAN) * np.transpose((X[:,i] - MEAN))
+       # coVariance[i,i] = sum(squareDiff[:])/np.shape(X)[0]
+    
+    ## Calulating covariance
+        nu = np.matlib.repmat(mu,len(X),1)
+        D = np.matmul(np.transpose(X-nu),(X - nu))
+        D = D/len(X)
+        coVariance=D
     
     return mean,coVariance
 
@@ -76,39 +82,56 @@ def qdaLearn(X,y):
     return mean,coVariance
 
 def ldaTest(means,covmat,Xtest,ytest):
-    c = np.hstack((Xtest,ytest))  
+    #c = np.hstack((Xtest,ytest))  
     classes, count = np.unique(ytest[:,0], return_counts = True)
     theta = np.zeros ((len(classes)))
     label = np.zeros(np.shape(ytest))
-    acc = np.zeros(np.shape(ytest))
+    eff = np.zeros([len(ytest),len(classes)])
+    acc = np.zeros(len(ytest))
     D = np.zeros((len(classes)))
 
     ## Calculating theta(y=1) for test data - all classes
     for i in range (0,1):#len(classes)):
         theta[i] = count[i]/len(ytest)
         
-        for i in range (0,len(ytest)):    
-            X = np.matlib.repmat(Xtest[i,:],len(classes),1)    
-            nu = np.zeros(np.shape(X))
-            #m = mean[:,i]
-            #nu = np.matlib.repmat(m,len(X),1)
-            nu = np.transpose(means)
-            sigma = inv(covmat)
-            D =  np.matmul(np.matmul((X - nu),sigma),np.transpose(X-nu)) #covmat - change variable name
-            pdf = np.amin(np.diagonal(D))
-            l= np.where(np.diagonal(D) == pdf)
-            label[i]=classes[l]
-            if label[i] == ytest[i]:
-                acc[i] = 1
-            else:
-                    acc[i] = 0
-            print(i)
+    #for i in range (0,len(ytest)):    
+        #X = np.matlib.repmat(Xtest[i,:],len(classes),1)    
+        #nu = np.zeros(np.shape(X))
+        #m = mean[:,i]
+        #nu = np.matlib.repmat(m,len(X),1)
+        #nu = np.transpose(means)
+        #sigma = inv(covmat)
+        #D =  np.matmul(np.matmul((X - nu),sigma),np.transpose(X-nu)) #covmat - change variable name
+        #pdf = np.amin(np.diagonal(D))
+        #l= np.where(np.diagonal(D) == pdf)
+        #label[i]=classes[l]
+        #if label[i] == ytest[i]:
+        #    acc[i] = 1
+        #else:
+        #    acc[i] = 0
+        #print(i)
             
-        unique, counts = np.unique(acc, return_counts=True)
-        acc=counts[1]/len(acc)*100
+    #unique, counts = np.unique(acc, return_counts=True)
+    #acc=counts[1]/len(acc)*100
+    for i in range (0,len(classes)):    
+        X=Xtest
+        nu=np.matlib.repmat(means[:,i],len(Xtest),1)
+        sigma=inv(covmat)   ## change coVariance to covmats
+        D=np.matmul(np.matmul((X-nu),sigma),np.transpose(X-nu)) #pdf for all samples for a specific class
+        eff[:,i] = np.diagonal(D)
+        
+    for i in range (0,len(ytest)):    
+        l=np.where(eff[i,:]==np.amin(eff[i,:]))
+        label[i]=classes[l]
+        if label[i]==ytest[i]:
+            acc[i]=1
+        else:
+            acc[i]=0
+        
+    unique, counts = np.unique(acc, return_counts=True)
+    accuracy=np.count_nonzero(acc==1)/len(acc)*100 ## changed count parameter
     
-    
-    return acc,label
+    return accuracy,label
 
 def qdaTest(means,covmats,Xtest,ytest):
     # Inputs
@@ -120,7 +143,38 @@ def qdaTest(means,covmats,Xtest,ytest):
     # ypred - N x 1 column vector indicating the predicted labels
 
     # IMPLEMENT THIS METHOD
-    return acc,ypred
+    
+    #c = np.hstack((Xtest,ytest))  
+    classes, count = np.unique(ytest[:,0], return_counts = True)
+    theta = np.zeros ((len(classes)))
+    label = np.zeros(np.shape(ytest))
+    eff = np.zeros([len(ytest),len(classes)])
+    acc = np.zeros(len(ytest))
+    D = np.zeros((len(classes)))
+
+        ## Calculating theta(y=1) for test data - all classes
+    for i in range (0,(len(classes))):#len(classes)):
+        theta[i] = count[i]/len(ytest)
+        
+    for i in range (0,len(classes)):
+        X=Xtest
+        nu=np.matlib.repmat(means[:,i],len(Xtest),1)
+        sigma=inv(covmats[i])   ## change coVariance to covmats
+        D=np.matmul(np.matmul((X-nu),sigma),np.transpose(X-nu)) #pdf for all samples for a specific class
+        eff[:,i] = np.diagonal(D)
+        
+    for i in range (0,len(ytest)):    
+        l=np.where(eff[i,:]==np.amin(eff[i,:]))
+        label[i]=classes[l]
+        if label[i]==ytest[i]:
+            acc[i]=1
+        else:
+            acc[i]=0
+        
+    unique, counts = np.unique(acc, return_counts=True)
+    accuracy=np.count_nonzero(acc==1)/len(acc)*100 ##changed count function
+    
+    return accuracy,label
 
 def learnOLERegression(X,y):
     # Inputs:                                                         
@@ -128,6 +182,8 @@ def learnOLERegression(X,y):
     # y = N x 1                                                               
     # Output: 
     # w = d x 1 
+    w = np.matmul(inv(np.matmul(np.transpose(X),X)),np.matmul(np.transpose(X),y))
+    
 	
     # IMPLEMENT THIS METHOD                                                   
     return w
@@ -150,6 +206,16 @@ def testOLERegression(w,Xtest,ytest):
     # ytest = X x 1
     # Output:
     # mse
+    for i in range (0,np.shape(ytest[:,0])[0]):
+        value = ytest[i] - np.matmul(np.transpose(w),Xtest[i])
+        value = np.square(value)
+        
+        if i == 0:
+            mse = value;
+        if i != 0:
+            mse = mse +value
+            
+    mse = mse/np.shape(ytest[:,0])[0]
     
     # IMPLEMENT THIS METHOD
     return mse
@@ -204,17 +270,19 @@ plt.subplot(1, 2, 1)
 
 zacc,zldares = ldaTest(means,covmat,xx,np.zeros((xx.shape[0],1)))
 plt.contourf(x1,x2,zldares.reshape((x1.shape[0],x2.shape[0])),alpha=0.3)
-plt.scatter(Xtest[:,0],Xtest[:,1],c=ytest)
+plt.scatter(Xtest[:,0],Xtest[:,1],c=ytest[:,0])
 plt.title('LDA')
 
 plt.subplot(1, 2, 2)
 
 zacc,zqdares = qdaTest(means,covmats,xx,np.zeros((xx.shape[0],1)))
 plt.contourf(x1,x2,zqdares.reshape((x1.shape[0],x2.shape[0])),alpha=0.3)
-plt.scatter(Xtest[:,0],Xtest[:,1],c=ytest)
+plt.scatter(Xtest[:,0],Xtest[:,1],c=ytest[:,0])
 plt.title('QDA')
 
 plt.show()
+
+
 # Problem 2
 if sys.version_info.major == 2:
     X,y,Xtest,ytest = pickle.load(open('diabetes.pickle','rb'))
