@@ -194,8 +194,11 @@ def learnRidgeRegression(X,y,lambd):
     # y = N x 1 
     # lambd = ridge parameter (scalar)
     # Output:                                                                  
-    # w = d x 1                                                                
-
+    # w = d x 1  
+    I= np.eye((np.shape(X)[1]))
+    lambdI= I * lambd
+    w = np.matmul(lambdI+np.matmul(np.transpose(X),X),np.matmul(np.transpose(X),y))
+    
     # IMPLEMENT THIS METHOD                                                   
     return w
 
