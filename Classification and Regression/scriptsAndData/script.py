@@ -29,21 +29,22 @@ def ldaLearn(X,y):
         for j in range (0,np.shape(X)[1]):
             elemIndices = np.where (c[:,2] == UE[i])
             classElem = X[elemIndices,j]
-            mu = sum (classElem[0,:])
-            mu = mu/np.shape (classElem)[1]
-            mean[j,i] = mu
-        
+           # mu = sum (classElem[0,:])
+            #mu = mu/np.shape (classElem)[1]
+            #mean[j,i] = mu
+            mean[j,i]= np.mean(classElem[0,:]) 
     ## Calculation of covariance matrix
     #for i in range (0,np.shape(X)[1]):
      #   MEAN=sum(X[:,i])/np.shape(X)[0]
       #  squareDiff = (X[:,i] - MEAN) * np.transpose((X[:,i] - MEAN))
        # coVariance[i,i] = sum(squareDiff[:])/np.shape(X)[0]
     
+    coVariance = np.cov(np.transpose(X))
     ## Calulating covariance
-        nu = np.matlib.repmat(mu,len(X),1)
-        D = np.matmul(np.transpose(X-nu),(X - nu))
-        D = D/len(X)
-        coVariance=D
+        #nu = np.matlib.repmat(mu,len(X),1)
+        #D = np.matmul(np.transpose(X-nu),(X - nu))
+        #D = D/len(X)
+        #coVariance=D
     
     return mean,coVariance
 
