@@ -198,8 +198,17 @@ def learnRidgeRegression(X,y,lambd):
     # w = d x 1  
     I= np.eye((np.shape(X)[1]))
     lambdI= I * lambd
-    w = np.matmul(lambdI+np.matmul(np.transpose(X),X),np.matmul(np.transpose(X),y))
+    Inv=inv(lambdI+np.matmul(np.transpose(X),X))
+    w = np.matmul(Inv,np.matmul(np.transpose(X),y))
+    #n=2;
     
+    #for i in range(0,n)
+    #w = learnOLERegression(X,y)
+    
+    #A= y-np.matmul(X,w)
+    #ne=lambd * np.matmul(np.transpose(w),w)
+    ##ne1=np.matmul(np.transpose(w),w)
+    #W= 1/2*(np.matmul(np.transpose(A),A)) + ne
     # IMPLEMENT THIS METHOD                                                   
     return w
 
@@ -210,9 +219,23 @@ def testOLERegression(w,Xtest,ytest):
     # ytest = X x 1
     # Output:
     # mse
+    mse=0
+    #for i in range (0,np.shape(ytest[:,0])[0]):
+        #value = ytest[i] - np.matmul(np.transpose(w),Xtest[i])
+        #value = np.square(value)
+        #
+       # if i == 0:
+      #   if i != 0:
+    #        mse = mse +value
+    #        
+    #mse = mse/np.shape(ytest[:,0])[0]
+    
+    mse =0
     for i in range (0,np.shape(ytest[:,0])[0]):
-        value = ytest[i] - np.matmul(np.transpose(w),Xtest[i])
-        value = np.square(value)
+        #w = np.squeeze((w))
+        #temp = Xtest[i]
+        value = ytest[i] - np.matmul(np.transpose(w),np.reshape(Xtest[i],[np.shape(Xtest)[1],1]))
+        value = np.matmul(np.transpose(value),value)
         
         if i == 0:
             mse = value;
@@ -228,8 +251,18 @@ def regressionObjVal(w, X, y, lambd):
 
     # compute squared error (scalar) and gradient of squared error with respect
     # to w (vector) for the given data X and y and the regularization parameter
-    # lambda                                                                  
-
+    # lambda 
+    if (np.shape(w)[0]==np.shape(Xtest)[1]):
+        error = testOLERegression(w,X,y)
+    else:
+        w=np.transpose(w)
+        error = testOLERegression(w,X,y)
+    #W=np.matlib.repmat(w,[len(ytest),1]) 
+    A= y-np.matmul(X, np.reshape(w,[len(w),1]))
+    B= lambd * np.matmul(np.transpose(w),w)
+    Jw = np.matmul(np.transpose(A), A) + B                                                         
+    Jw = Jw/2
+    error_grad=Jw
     # IMPLEMENT THIS METHOD                                             
     return error, error_grad
 
@@ -239,7 +272,11 @@ def mapNonLinear(x,p):
     # p - integer (>= 0)                                                       
     # Outputs:                                                                 
     # Xp - (N x (p+1)) 
-	
+    x=np.reshape(x,[len(x),1])
+    Xp=x
+    for i in range(2,p+2):
+        temp = np.reshape(np.power(x,i),[len(x),1])
+        Xp = np.concatenate((Xp,temp),axis=1)
     # IMPLEMENT THIS METHOD
     return Xp
 
