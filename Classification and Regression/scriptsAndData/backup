@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 14 09:20:24 2018
+
+@author: muthuvel
+"""
+
 import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
@@ -19,7 +27,6 @@ def ldaLearn(X,y):
     # covmat - A single d x d learnt covariance matrix 
     
     # IMPLEMENT THIS METHOD 
-    
     c=np.hstack((X,y))    
     UE  = np.unique (y[:,0])
     mean = np.zeros ((np.shape(X)[1], len(UE))) #initializing mean matrix
@@ -30,10 +37,22 @@ def ldaLearn(X,y):
         for j in range (0,np.shape(X)[1]):
             elemIndices = np.where (c[:,2] == UE[i])
             classElem = X[elemIndices,j]
+           # mu = sum (classElem[0,:])
+            #mu = mu/np.shape (classElem)[1]
+            #mean[j,i] = mu
             mean[j,i]= np.mean(classElem[0,:]) 
+    ## Calculation of covariance matrix
+    #for i in range (0,np.shape(X)[1]):
+     #   MEAN=sum(X[:,i])/np.shape(X)[0]
+      #  squareDiff = (X[:,i] - MEAN) * np.transpose((X[:,i] - MEAN))
+       # coVariance[i,i] = sum(squareDiff[:])/np.shape(X)[0]
     
-    ##Caculation covariance 
     coVariance = np.cov(np.transpose(X))
+    ## Calulating covariance
+        #nu = np.matlib.repmat(mu,len(X),1)
+        #D = np.matmul(np.transpose(X-nu),(X - nu))
+        #D = D/len(X)
+        #coVariance=D
     
     return mean,coVariance
 
@@ -54,7 +73,7 @@ def qdaLearn(X,y):
     coVariance = [0]* len(UE)
     temp = np.zeros ((np.shape(X)[1], np.shape(X)[1]))
 
-    ## Calculation of mean
+## Calculation of mean
     for i in range (0,len(UE)):
         for j in range (0,np.shape(X)[1]):
             elemIndices = np.where (c[:,2] == UE[i])
@@ -72,7 +91,7 @@ def qdaLearn(X,y):
     return mean,coVariance
 
 def ldaTest(means,covmat,Xtest,ytest):
- 
+    #c = np.hstack((Xtest,ytest))  
     classes, count = np.unique(ytest[:,0], return_counts = True)
     theta = np.zeros (np.shape(means)[1])
     label = np.zeros([len(Xtest),1])
@@ -81,6 +100,32 @@ def ldaTest(means,covmat,Xtest,ytest):
     D = np.zeros(np.shape(means)[1])
     a = np.array([1,2,3,4,5])
 
+    ## Calculating theta(y=1) for test data - all classes
+    #for i in range (0,1):#len(classes)):
+    #    theta[i] = count[i]/np.shape(means)[1]
+    
+    #for i in range
+        
+    #for i in range (0,len(ytest)):    
+        #X = np.matlib.repmat(Xtest[i,:],len(classes),1)    
+        #nu = np.zeros(np.shape(X))
+        #m = mean[:,i]
+        #nu = np.matlib.repmat(m,len(X),1)
+        #nu = np.transpose(means)
+        #sigma = inv(covmat)
+        #D =  np.matmul(np.matmul((X - nu),sigma),np.transpose(X-nu)) #covmat - change variable name
+        #pdf = np.amin(np.diagonal(D))
+        #l= np.where(np.diagonal(D) == pdf)
+        #label[i]=classes[l]
+        #if label[i] == ytest[i]:
+        #    acc[i] = 1
+        #else:
+        #    acc[i] = 0
+        #print(i)
+            
+    #unique, counts = np.unique(acc, return_counts=True)
+    #acc=counts[1]/len(acc)*100
+    
     for i in range (0,np.shape(means)[1]):    
         X=Xtest
         nu=np.matlib.repmat(means[:,i],len(Xtest),1)
@@ -95,8 +140,7 @@ def ldaTest(means,covmat,Xtest,ytest):
             acc[i]=1
         else:
             acc[i]=0
-    
-    # Calculating accuracy    
+        
     unique, counts = np.unique(acc, return_counts=True)
     accuracy=np.count_nonzero(acc==1)/len(acc)*100 ## changed count parameter
     
@@ -113,6 +157,7 @@ def qdaTest(means,covmats,Xtest,ytest):
 
     # IMPLEMENT THIS METHOD
     
+    #c = np.hstack((Xtest,ytest))  
     classes, count = np.unique(ytest[:,0], return_counts = True)
     theta = np.zeros (np.shape(means)[1])
     label = np.zeros([len(Xtest),1])
@@ -121,6 +166,10 @@ def qdaTest(means,covmats,Xtest,ytest):
     D = np.zeros(np.shape(means)[1])
     a = np.array([1,2,3,4,5])
 
+        ## Calculating theta(y=1) for test data - all classes
+    #for i in range (0,np.shape(means)[1]):#len(classes)):
+    #    theta[i] = count[i]/np.shape(means)[1]
+        
     for i in range (0,np.shape(means)[1]):
         X=Xtest
         nu=np.matlib.repmat(means[:,i],len(Xtest),1)
@@ -135,8 +184,7 @@ def qdaTest(means,covmats,Xtest,ytest):
             acc[i]=1
         else:
             acc[i]=0
-    
-    # Calculating accuracy
+        
     unique, counts = np.unique(acc, return_counts=True)
     accuracy=np.count_nonzero(acc==1)/len(acc)*100 ##changed count function
     
@@ -148,11 +196,11 @@ def learnOLERegression(X,y):
     # y = N x 1                                                               
     # Output: 
     # w = d x 1 
+    w = np.matmul(inv(np.matmul(np.transpose(X),X)),np.matmul(np.transpose(X),y))
+    
+	
     # IMPLEMENT THIS METHOD                                                   
-
-     w = np.matmul(inv(np.matmul(np.transpose(X),X)),np.matmul(np.transpose(X),y))
-     
-     return w
+    return w
 
 def learnRidgeRegression(X,y,lambd):
     # Inputs:
@@ -161,14 +209,20 @@ def learnRidgeRegression(X,y,lambd):
     # lambd = ridge parameter (scalar)
     # Output:                                                                  
     # w = d x 1  
-    
-    # IMPLEMENT THIS METHOD  
-    
     I= np.eye((np.shape(X)[1]))
     lambdI= I * lambd
     Inv=inv(lambdI+np.matmul(np.transpose(X),X))
     w = np.matmul(Inv,np.matmul(np.transpose(X),y))
-                                                 
+    #n=2;
+    
+    #for i in range(0,n)
+    #w = learnOLERegression(X,y)
+    
+    #A= y-np.matmul(X,w)
+    #ne=lambd * np.matmul(np.transpose(w),w)
+    ##ne1=np.matmul(np.transpose(w),w)
+    #W= 1/2*(np.matmul(np.transpose(A),A)) + ne
+    # IMPLEMENT THIS METHOD                                                   
     return w
 
 def testOLERegression(w,Xtest,ytest):
@@ -178,8 +232,6 @@ def testOLERegression(w,Xtest,ytest):
     # ytest = X x 1
     # Output:
     # mse
-    
-    # IMPLEMENT THIS METHOD
     
     mse =0
     for i in range (0,np.shape(ytest[:,0])[0]):
@@ -195,6 +247,7 @@ def testOLERegression(w,Xtest,ytest):
             
     mse = mse/len(ytest)
     
+    # IMPLEMENT THIS METHOD
     return mse
 
 def regressionObjVal(w, X, y, lambd):
@@ -202,12 +255,18 @@ def regressionObjVal(w, X, y, lambd):
     # compute squared error (scalar) and gradient of squared error with respect
     # to w (vector) for the given data X and y and the regularization parameter
     # lambda 
-    
     if (np.shape(w)[0]==np.shape(Xtest)[1]):
         w=w
     #    error = testOLERegression(w,X,y)
     else:
         w=np.transpose(w)
+    #    error = testOLERegression(w,X,y)
+    #A= y-np.matmul(X, np.reshape(w,[len(w),1]))
+    #B= lambd * np.matmul(np.transpose(w),w)
+    #Jw = np.matmul(np.transpose(A), A) + B                                                         
+    #Jw = Jw/2
+    #error_grad=Jw
+    # IMPLEMENT THIS METHOD  
     
     A = np.subtract(y,np.reshape(np.dot(X,w),[len(y),1]))
     B = lambd * np.dot(np.transpose(w),w)
@@ -216,8 +275,8 @@ def regressionObjVal(w, X, y, lambd):
     error=Jw
     
     error_grad= np.dot(-2 * np.transpose(X),A) + np.reshape(np.dot(2,np.dot(lambd, w)),[np.shape(X)[1],1])
-    error_grad=np.squeeze(np.asarray(error_grad))   
-                               
+    #w=minimize(regressionObjVal,w, jac=True, args = (X, y, lambd),method='CG', options=opts)  
+    error_grad=np.squeeze(np.asarray(error_grad))                                  
     return error, error_grad
 
 def mapNonLinear(x,p):
@@ -226,19 +285,12 @@ def mapNonLinear(x,p):
     # p - integer (>= 0)                                                       
     # Outputs:                                                                 
     # Xp - (N x (p+1)) 
-    
-    # IMPLEMENT THIS METHOD
-    
     x=np.reshape(x,[len(x),1])
     Xp=x
-    intercept=np.ones([len(x),1])
     for i in range(2,p+2):
         temp = np.reshape(np.power(x,i),[len(x),1])
-        if i==2:
-            Xp = np.concatenate((intercept,Xp,temp),axis=1)
-        else:
-            Xp = np.concatenate((Xp,temp),axis=1)
-    
+        Xp = np.concatenate((Xp,temp),axis=1)
+    # IMPLEMENT THIS METHOD
     return Xp
 
 # Main script
@@ -314,8 +366,6 @@ for lambd in lambdas:
     w_l = learnRidgeRegression(X_i,y,lambd)
     mses3_train[i] = testOLERegression(w_l,X_i,y)
     mses3[i] = testOLERegression(w_l,Xtest_i,ytest)
-    if i==6:
-        weight_ideal=w_l
     i = i + 1
 fig = plt.figure(figsize=[12,6])
 plt.subplot(1, 2, 1)

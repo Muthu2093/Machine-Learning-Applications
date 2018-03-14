@@ -231,13 +231,9 @@ def mapNonLinear(x,p):
     
     x=np.reshape(x,[len(x),1])
     Xp=x
-    intercept=np.ones([len(x),1])
     for i in range(2,p+2):
         temp = np.reshape(np.power(x,i),[len(x),1])
-        if i==2:
-            Xp = np.concatenate((intercept,Xp,temp),axis=1)
-        else:
-            Xp = np.concatenate((Xp,temp),axis=1)
+        Xp = np.concatenate((Xp,temp),axis=1)
     
     return Xp
 
@@ -363,7 +359,7 @@ pmax = 7
 lambda_opt = lambdas[np.argmin(mses3)] # REPLACE THIS WITH lambda_opt estimated from Problem 3
 mses5_train = np.zeros((pmax,2))
 mses5 = np.zeros((pmax,2))
-for p in range(pmax):
+for p in range(0,7):
     Xd = mapNonLinear(X[:,2],p)
     Xdtest = mapNonLinear(Xtest[:,2],p)
     w_d1 = learnRidgeRegression(Xd,y,0)
