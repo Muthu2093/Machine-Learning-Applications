@@ -18,8 +18,6 @@ def ldaLearn(X,y):
     # means - A d x k matrix containing learnt means for each of the k classes
     # covmat - A single d x d learnt covariance matrix 
     
-    # IMPLEMENT THIS METHOD 
-    
     c=np.hstack((X,y))    
     UE  = np.unique (y[:,0])
     mean = np.zeros ((np.shape(X)[1], len(UE))) #initializing mean matrix
@@ -38,6 +36,7 @@ def ldaLearn(X,y):
     return mean,coVariance
 
 def qdaLearn(X,y):
+    
     # Inputs
     # X - a N x d matrix with each row corresponding to a training example
     # y - a N x 1 column vector indicating the labels for each training example
@@ -45,8 +44,6 @@ def qdaLearn(X,y):
     # Outputs
     # means - A d x k matrix containing learnt means for each of the k classes
     # covmats - A list of k d x d learnt covariance matrices for each of the k classes
-    
-    # IMPLEMENT THIS METHOD
     
     c=np.hstack((X,y))    
     UE  = np.unique (y[:,0])
@@ -84,7 +81,7 @@ def ldaTest(means,covmat,Xtest,ytest):
     for i in range (0,np.shape(means)[1]):    
         X=Xtest
         nu=np.matlib.repmat(means[:,i],len(Xtest),1)
-        sigma=inv(covmat)   ## change coVariance to covmats
+        sigma=inv(covmat)
         D=np.matmul(np.matmul((X-nu),sigma),np.transpose(X-nu)) #pdf for all samples for a specific class
         eff[:,i] = np.diagonal(D)
         
@@ -98,11 +95,12 @@ def ldaTest(means,covmat,Xtest,ytest):
     
     # Calculating accuracy    
     unique, counts = np.unique(acc, return_counts=True)
-    accuracy=np.count_nonzero(acc==1)/len(acc)*100 ## changed count parameter
+    accuracy=np.count_nonzero(acc==1)/len(acc)*100 
     
     return accuracy,label
 
 def qdaTest(means,covmats,Xtest,ytest):
+    
     # Inputs
     # means, covmats - parameters of the QDA model
     # Xtest - a N x d matrix with each row corresponding to a test example
@@ -110,8 +108,6 @@ def qdaTest(means,covmats,Xtest,ytest):
     # Outputs
     # acc - A scalar accuracy value
     # ypred - N x 1 column vector indicating the predicted labels
-
-    # IMPLEMENT THIS METHOD
     
     classes, count = np.unique(ytest[:,0], return_counts = True)
     theta = np.zeros (np.shape(means)[1])
@@ -124,7 +120,7 @@ def qdaTest(means,covmats,Xtest,ytest):
     for i in range (0,np.shape(means)[1]):
         X=Xtest
         nu=np.matlib.repmat(means[:,i],len(Xtest),1)
-        sigma=inv(covmats[i])   ## change coVariance to covmats
+        sigma=inv(covmats[i])
         D=np.matmul(np.matmul((X-nu),sigma),np.transpose(X-nu)) #pdf for all samples for a specific class
         eff[:,i] = np.diagonal(D)
         
@@ -138,7 +134,7 @@ def qdaTest(means,covmats,Xtest,ytest):
     
     # Calculating accuracy
     unique, counts = np.unique(acc, return_counts=True)
-    accuracy=np.count_nonzero(acc==1)/len(acc)*100 ##changed count function
+    accuracy=np.count_nonzero(acc==1)/len(acc)*100
     
     return accuracy,label
 
@@ -147,8 +143,7 @@ def learnOLERegression(X,y):
     # X = N x d 
     # y = N x 1                                                               
     # Output: 
-    # w = d x 1 
-    # IMPLEMENT THIS METHOD                                                   
+    # w = d x 1                                                 
 
      w = np.matmul(inv(np.matmul(np.transpose(X),X)),np.matmul(np.transpose(X),y))
      
@@ -161,8 +156,6 @@ def learnRidgeRegression(X,y,lambd):
     # lambd = ridge parameter (scalar)
     # Output:                                                                  
     # w = d x 1  
-    
-    # IMPLEMENT THIS METHOD  
     
     I= np.eye((np.shape(X)[1]))
     lambdI= I * lambd
@@ -178,8 +171,6 @@ def testOLERegression(w,Xtest,ytest):
     # ytest = X x 1
     # Output:
     # mse
-    
-    # IMPLEMENT THIS METHOD
     
     mse =0
     for i in range (0,np.shape(ytest[:,0])[0]):
@@ -205,14 +196,12 @@ def regressionObjVal(w, X, y, lambd):
     
     if (np.shape(w)[0]==np.shape(Xtest)[1]):
         w=w
-    #    error = testOLERegression(w,X,y)
     else:
         w=np.transpose(w)
     
     A = np.subtract(y,np.reshape(np.dot(X,w),[len(y),1]))
     B = lambd * np.dot(np.transpose(w),w)
-    Jw =np.dot(np.transpose(A),A)/2 + B/2 # check if you need to divide by 2
-    Jw = Jw
+    Jw =np.dot(np.transpose(A),A)/2 + B/2 # Do not divide by 2 for smooth curve
     error=Jw
     
     error_grad= np.dot(-2 * np.transpose(X),A) + np.reshape(np.dot(2,np.dot(lambd, w)),[np.shape(X)[1],1])
@@ -226,24 +215,20 @@ def mapNonLinear(x,p):
     # p - integer (>= 0)                                                       
     # Outputs:                                                                 
     # Xp - (N x (p+1)) 
-    
-    # IMPLEMENT THIS METHOD
-    
+
     x=np.reshape(x,[len(x),1])
-    Xp=x
     intercept=np.ones([len(x),1])
-    for i in range(2,p+2):
+    Xp= intercept
+    for i in range(1,p+1):
         temp = np.reshape(np.power(x,i),[len(x),1])
-        if i==2:
-            Xp = np.concatenate((intercept,Xp,temp),axis=1)
-        else:
-            Xp = np.concatenate((Xp,temp),axis=1)
+        Xp = np.concatenate((Xp,temp),axis=1)
     
     return Xp
 
 # Main script
 
 # Problem 1
+print("######## PROBLEM 1 #########")
 # load the sample data                                                                 
 if sys.version_info.major == 2:
     X,y,Xtest,ytest = pickle.load(open('sample.pickle','rb'))
@@ -286,6 +271,7 @@ plt.show()
 
 
 # Problem 2
+print("######## PROBLEM 2 #########")
 if sys.version_info.major == 2:
     X,y,Xtest,ytest = pickle.load(open('diabetes.pickle','rb'))
 else:
@@ -305,6 +291,7 @@ print('MSE without intercept '+str(mle))
 print('MSE with intercept '+str(mle_i))
 
 # Problem 3
+print("######## PROBLEM 3 #########")
 k = 101
 lambdas = np.linspace(0, 1, num=k)
 i = 0
@@ -328,6 +315,7 @@ plt.title('MSE for Test Data')
 plt.show()
 
 # Problem 4
+print("######## PROBLEM 4 #########")
 k = 101
 lambdas = np.linspace(0, 1, num=k)
 i = 0
@@ -359,8 +347,9 @@ plt.show()
 
 
 # Problem 5
+print("######## PROBLEM 5 #########")
 pmax = 7
-lambda_opt = lambdas[np.argmin(mses3)] # REPLACE THIS WITH lambda_opt estimated from Problem 3
+lambda_opt = lambdas[np.argmin(mses3)] #  lambda_opt estimated from Problem 3
 mses5_train = np.zeros((pmax,2))
 mses5 = np.zeros((pmax,2))
 for p in range(pmax):
