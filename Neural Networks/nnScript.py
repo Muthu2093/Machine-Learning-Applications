@@ -3,6 +3,7 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 import math
+from sklearn.feature_selection import VarianceThreshold
 
 
 def initializeWeights(n_in, n_out):
@@ -132,7 +133,9 @@ def preprocess():
 
     # Feature selection
     # Your code here.
-
+    train_data = np.delete(train_data,np.where(np.amax(train_data,axis=0)==0),1)
+    test_data = np.delete(test_data,np.where(np.amax(test_data,axis=0)==0),1)
+    validation_data = np.delete(validation_data,np.where(np.amax(validation_data,axis=0)==0),1)
     print('preprocess done')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label

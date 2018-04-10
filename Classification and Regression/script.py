@@ -201,7 +201,7 @@ def regressionObjVal(w, X, y, lambd):
     
     A = np.subtract(y,np.reshape(np.dot(X,w),[len(y),1]))
     B = lambd * np.dot(np.transpose(w),w)
-    Jw =np.dot(np.transpose(A),A)/2 + B/2 # Do not divide by 2 for smooth curve
+    Jw =np.dot(np.transpose(A),A) + B # Do not divide by 2 for smooth curve
     error=Jw
     
     error_grad= np.dot(-2 * np.transpose(X),A) + np.reshape(np.dot(2,np.dot(lambd, w)),[np.shape(X)[1],1])
