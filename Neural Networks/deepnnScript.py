@@ -79,7 +79,7 @@ pred,x,y = create_multilayer_perceptron()
 # Define loss and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-
+timer =1
 # Initializing the variables
 init = tf.global_variables_initializer()
 
@@ -88,9 +88,11 @@ train_features, train_labels, valid_features, valid_labels, test_features, test_
 # Launch the graph
 with tf.Session() as sess:
     sess.run(init)
-
+    
     # Training cycle
     for epoch in range(training_epochs):
+        print(timer)
+        timer = timer +1
         avg_cost = 0.
         total_batch = int(train_features.shape[0] / batch_size)
         # Loop over all batches

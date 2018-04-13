@@ -133,9 +133,9 @@ def preprocess():
 
     # Feature selection
     # Your code here.
-    train_data = np.delete(train_data,np.where(np.amax(train_data,axis=0)==0),1)
-    test_data = np.delete(test_data,np.where(np.amax(test_data,axis=0)==0),1)
-    validation_data = np.delete(validation_data,np.where(np.amax(validation_data,axis=0)==0),1)
+    #train_data = np.delete(train_data,np.where(np.amax(train_data,axis=0)==0),1)
+    #test_data = np.delete(test_data,np.where(np.amax(train_data,axis=0)==0),1)
+    #validation_data = np.delete(validation_data,np.where(np.amax(train_data,axis=0)==0),1)
     print('preprocess done')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label
@@ -185,10 +185,12 @@ def nnObjFunction(params, *args):
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
     obj_val = 0
     
+    training_data = np.concatenate((training_data,np.reshape(np.ones(len(training_data)),[len(training_data), 1])),axis = 1)
     ## Feed Forward network
-    output_HL = np.dot(training_data,np.transpose(w1[:,0:np.shape(w1)[1]-1]))
+    output_HL = np.dot(training_data,np.transpose(w1[:,0:np.shape(w1)[1]]))
     output_HL_Sigmoid = sigmoid(output_HL)
-    output_OL = np.dot(output_HL_Sigmoid,np.transpose(w2[:,0:np.shape(w2)[1]-1]))
+    output_HL_Sigmoid = np.concatenate((output_HL_Sigmoid,np.reshape(np.ones(len(output_HL_Sigmoid)),[len(output_HL_Sigmoid), 1])),axis = 1)
+    output_OL = np.dot(output_HL_Sigmoid,np.transpose(w2[:,0:np.shape(w2)[1]]))
     output_OL_Sigmoid = sigmoid(output_OL)
     
     ## Calculating error function
@@ -209,13 +211,13 @@ def nnObjFunction(params, *args):
     #ones = np.ones([grad_w1.shape[0],1])
     #grad_w1 = np.append(grad_w1,ones, axis =1)
     
-    temp = np.transpose((np.ones(output_HL_Sigmoid.shape) - output_HL_Sigmoid))
+    temp = np.transpose((np.ones(output_HL_Sigmoid.shape) - output_HL_Sigmoid))[1:output_HL_Sigmoid.shape[0]-1,:]
     temp1 = np.matmul(temp,output_HL_Sigmoid)
-    temp2 = np.transpose(np.dot(delta,w2[:,0:np.shape(w2)[1]-1]))
+    temp2 = np.transpose(np.dot(delta,w2[:,0:np.shape(w2)[1]]))
     temp3 = np.dot(temp1,temp2)
     grad_w2 = np.dot(temp3,training_data)
-    #ones = np.ones([1, grad_w2.shape[1]])
-    #grad_w2 = np.append(grad_w2,ones, axis =0)
+    #ones = np.ones([grad_w2.shape[0],1])
+    #grad_w2 = np.append(grad_w2,ones, axis =1)
     
     
     ## Converting gradient matrices to 1D array
@@ -255,8 +257,13 @@ def nnPredict(w1, w2, data):
        
     % Output: 
     % label: a column vector of predicted labels"""
-
+    output_HL = np.dot(data,np.transpose(w1[:,0:np.shape(w1)[1]-1]))
+    output_HL_Sigmoid = sigmoid(output_HL)
+    output_OL = np.dot(output_HL_Sigmoid,np.transpose(w2[:,0:np.shape(w2)[1]-1]))
+    output_OL_Sigmoid = sigmoid(output_OL)
+    
     labels = np.array([])
+    labels = np.argmax(output_OL_Sigmoid,axis=1)
     # Your code here
 
     return labels
@@ -285,7 +292,7 @@ initial_w2 = initializeWeights(n_hidden, n_class)
 initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
 
 # set the regularization hyper-parameter
-lambdaval = 4
+lambdaval = 0
 
 args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
