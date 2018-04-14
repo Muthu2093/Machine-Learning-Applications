@@ -179,51 +179,7 @@ def nnObjFunction(params, *args):
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
 
-    n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
-    w1 = params[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
-    w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-    obj_val = 0
-    
-    training_data = np.concatenate((training_data,np.reshape(np.ones(len(training_data)),[len(training_data), 1])),axis = 1)
-    ## Feed Forward network
-    output_HL = np.dot(training_data,np.transpose(w1[:,0:np.shape(w1)[1]]))
-    output_HL_Sigmoid = sigmoid(output_HL)
-    output_HL_Sigmoid = np.concatenate((output_HL_Sigmoid,np.reshape(np.ones(len(output_HL_Sigmoid)),[len(output_HL_Sigmoid), 1])),axis = 1)
-    output_OL = np.dot(output_HL_Sigmoid,np.transpose(w2[:,0:np.shape(w2)[1]]))
-    output_OL_Sigmoid = sigmoid(output_OL)
-    
-    ## Calculating error function
-    temp_l = np.ones(np.shape(training_label)) - training_label
-    temp_op = np.ones(np.shape(output_OL_Sigmoid)) - output_OL_Sigmoid
-    error_OL =  (- 1/ training_label.shape[0]) * (np.dot(np.log(np.transpose(output_OL_Sigmoid)),training_label) + np.dot(np.transpose(np.log(temp_op)), temp_l))        
-    error_OL = np.sum(error_OL)
-    
-    
-    ## Regularization
-    weight1 = np.sum(np.power(w1,2))
-    weight2 = np.sum(np.power(w2,2))
-    obj_val = error_OL + (lambdaval/(2*test_label.shape[0]) * (weight1 + weight2))
-    
-    ## Calculating Gradients
-    delta = output_OL_Sigmoid - np.reshape(np.repeat(training_label,output_OL_Sigmoid.shape[1]),np.shape(output_OL_Sigmoid))
-    grad_w1 = np.dot(np.transpose(delta),output_HL_Sigmoid)
-    #ones = np.ones([grad_w1.shape[0],1])
-    #grad_w1 = np.append(grad_w1,ones, axis =1)
-    
-    temp = np.transpose((np.ones(output_HL_Sigmoid.shape) - output_HL_Sigmoid))[1:output_HL_Sigmoid.shape[0]-1,:]
-    temp1 = np.matmul(temp,output_HL_Sigmoid)
-    temp2 = np.transpose(np.dot(delta,w2[:,0:np.shape(w2)[1]]))
-    temp3 = np.dot(temp1,temp2)
-    grad_w2 = np.dot(temp3,training_data)
-    #ones = np.ones([grad_w2.shape[0],1])
-    #grad_w2 = np.append(grad_w2,ones, axis =1)
-    
-    
-    ## Converting gradient matrices to 1D array
-    obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    
-    
     # Your code here
     #
     #
@@ -236,8 +192,51 @@ def nnObjFunction(params, *args):
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
     # obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    #obj_grad = np.array([])
+    n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
+    w1 = params[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
+    w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+    obj_val = 0
+    
+    ## Creating bias  term in training data
+    training_data = np.concatenate((training_data,np.reshape(np.ones(len(training_data)),[len(training_data), 1])),axis = 1)
+    
+    ## Feed Forward network
+    output_HL = np.dot(w1,np.transpose(training_data))
+    output_HL_Sigmoid = sigmoid(output_HL)
+    bias_hidden = np.ones([1,output_HL_Sigmoid.shape[1]])
+    output_HL_Sigmoid = np.concatenate((output_HL_Sigmoid,bias_hidden),axis = 0)
+    output_OL = np.dot(w2,output_HL_Sigmoid)
+    output_OL_Sigmoid = sigmoid(output_OL)
+    
+    ## Creating boolean labels with size k * n
+    training_label_n = np.zeros([n_class, training_label.shape[0]])
+    for i in range(0,len(training_label)):
+        training_label_n[int(training_label[i]), i ] = 1
+    
+    ## Calculating error_function
+    leftTerm =   training_label_n * np.log(output_OL_Sigmoid)  
+    rightTerm = (1-training_label_n) * np.log(1-output_OL_Sigmoid)
+    error_OL = leftTerm + rightTerm
+    error_OL = -np.sum(error_OL)/training_data.shape[0]
+    
+    ## Calculating gradients for w1 and w2
+    delta_OL = output_OL_Sigmoid - training_label_n
+    grad_w2 = np.matmul(delta_OL, np.transpose(output_HL_Sigmoid))
+    
+    leftTerm = np.dot(np.transpose(w2), delta_OL)
+    rightTerm = output_HL_Sigmoid*(1 - output_HL_Sigmoid)
+    grad_w1 =  np.dot(leftTerm*rightTerm, training_data)
+    
+    ## Incorportaing regularization in gradients and and in error function
+    grad_w1 = (grad_w1[0:n_hidden,:] + (lambdaval * w1))/ len(training_data)
+    grad_w2 = (grad_w2 + (lambdaval * w2))/ len(training_data)
+    
+    obj_val = error_OL + (lambdaval/(2*len(training_data))) * (np.sum(np.square(w1)) + np.sum(np.square(w2)))
+    
+    print(obj_val)
+    obj_grad = np.array([])
+    obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
     return (obj_val, obj_grad)
 
 
@@ -257,13 +256,17 @@ def nnPredict(w1, w2, data):
        
     % Output: 
     % label: a column vector of predicted labels"""
-    output_HL = np.dot(data,np.transpose(w1[:,0:np.shape(w1)[1]-1]))
+    data = np.concatenate((data,np.reshape(np.ones(len(data)),[len(data), 1])),axis = 1)
+    
+    output_HL = np.dot(w1,np.transpose(data))
     output_HL_Sigmoid = sigmoid(output_HL)
-    output_OL = np.dot(output_HL_Sigmoid,np.transpose(w2[:,0:np.shape(w2)[1]-1]))
+    bias_hidden = np.ones([1,output_HL_Sigmoid.shape[1]])
+    output_HL_Sigmoid = np.concatenate((output_HL_Sigmoid,bias_hidden),axis = 0)
+    output_OL = np.dot(w2,output_HL_Sigmoid)
     output_OL_Sigmoid = sigmoid(output_OL)
     
     labels = np.array([])
-    labels = np.argmax(output_OL_Sigmoid,axis=1)
+    labels = np.argmax(output_OL_Sigmoid,axis=0)
     # Your code here
 
     return labels
@@ -292,7 +295,7 @@ initial_w2 = initializeWeights(n_hidden, n_class)
 initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
 
 # set the regularization hyper-parameter
-lambdaval = 0
+lambdaval = 4
 
 args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
