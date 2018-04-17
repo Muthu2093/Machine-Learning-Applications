@@ -4,6 +4,7 @@ from scipy.io import loadmat
 from math import sqrt
 import math
 from sklearn.feature_selection import VarianceThreshold
+import timeit
 
 
 def initializeWeights(n_in, n_out):
@@ -133,12 +134,12 @@ def preprocess():
 
     # Feature selection
     # Your code here.
-    #train_data = np.delete(train_data,np.where(np.amax(train_data,axis=0)==0),1)
-    #test_data = np.delete(test_data,np.where(np.amax(train_data,axis=0)==0),1)
-    #validation_data = np.delete(validation_data,np.where(np.amax(train_data,axis=0)==0),1)
+    train_data1 = np.delete(train_data,np.where(np.amax(train_data,axis=0)==0),1)
+    test_data1 = np.delete(test_data,np.where(np.amax(train_data,axis=0)==0),1)
+    validation_data1 = np.delete(validation_data,np.where(np.amax(train_data,axis=0)==0),1)
     print('preprocess done')
 
-    return train_data, train_label, validation_data, validation_label, test_data, test_label
+    return train_data1, train_label, validation_data1, validation_label, test_data1, test_label
 
 
 def nnObjFunction(params, *args):
@@ -216,7 +217,7 @@ def nnObjFunction(params, *args):
     
     ## Calculating error_function
     leftTerm =   training_label_n * np.log(output_OL_Sigmoid)  
-    rightTerm = (1-training_label_n) * np.log(1-output_OL_Sigmoid)
+    rightTerm = (np.ones(training_label_n.shape)-training_label_n) * np.log(np.ones(output_OL_Sigmoid.shape)-output_OL_Sigmoid)
     error_OL = leftTerm + rightTerm
     error_OL = -np.sum(error_OL)/training_data.shape[0]
     
@@ -225,7 +226,7 @@ def nnObjFunction(params, *args):
     grad_w2 = np.matmul(delta_OL, np.transpose(output_HL_Sigmoid))
     
     leftTerm = np.dot(np.transpose(w2), delta_OL)
-    rightTerm = output_HL_Sigmoid*(1 - output_HL_Sigmoid)
+    rightTerm = output_HL_Sigmoid*(np.ones(output_HL_Sigmoid.shape) - output_HL_Sigmoid)
     grad_w1 =  np.dot(leftTerm*rightTerm, training_data)
     
     ## Incorportaing regularization in gradients and and in error function
@@ -234,7 +235,7 @@ def nnObjFunction(params, *args):
     
     obj_val = error_OL + (lambdaval/(2*len(training_data))) * (np.sum(np.square(w1)) + np.sum(np.square(w2)))
     
-    print(obj_val)
+    #print(obj_val)
     obj_grad = np.array([])
     obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
     return (obj_val, obj_grad)
@@ -275,61 +276,73 @@ def nnPredict(w1, w2, data):
 """**************Neural Network Script Starts here********************************"""
 
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
-
-#  Train Neural Network
-
-# set the number of nodes in input unit (not including bias unit)
-n_input = train_data.shape[1]
-
-# set the number of nodes in hidden unit (not including bias unit)
-n_hidden = 50
-
-# set the number of nodes in output unit
-n_class = 10
-
-# initialize the weights into some random matrices
-initial_w1 = initializeWeights(n_input, n_hidden)
-initial_w2 = initializeWeights(n_hidden, n_class)
-
-# unroll 2 weight matrices into single column vector
-initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
-
-# set the regularization hyper-parameter
-lambdaval = 4
-
-args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
-
-# Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
-
-opts = {'maxiter': 50}  # Preferred value.
-
-nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
-
-# In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
-# and nnObjGradient. Check documentation for this function before you proceed.
-# nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
-
-
-# Reshape nnParams from 1D vector into w1 and w2 matrices
-w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
-w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-
-# Test the computed parameters
-
-predicted_label = nnPredict(w1, w2, train_data)
-
-# find the accuracy on Training Dataset
-
-print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
-
-predicted_label = nnPredict(w1, w2, validation_data)
-
-# find the accuracy on Validation Dataset
-
-print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
-
-predicted_label = nnPredict(w1, w2, test_data)
-
-# find the accuracy on Validation Dataset
-
-print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+lambda_range = np.array([0,5,10,15,20,25,30,35,40,45,50,55,60])
+hiddennodes_range = np.array([200])
+i = 1
+for lambdaval in lambda_range:
+    for n_hidden in hiddennodes_range:
+        print(str(i)+'. ###############################################################################')
+        start = timeit.default_timer()
+        #  Train Neural Network
+        
+        # set the number of nodes in input unit (not including bias unit)
+        n_input = train_data.shape[1]
+        
+        # set the number of nodes in hidden unit (not including bias unit)
+        #n_hidden = 50
+        
+        # set the number of nodes in output unit
+        n_class = 10
+        
+        # initialize the weights into some random matrices
+        initial_w1 = initializeWeights(n_input, n_hidden)
+        initial_w2 = initializeWeights(n_hidden, n_class)
+        
+        # unroll 2 weight matrices into single column vector
+        initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
+        
+        # set the regularization hyper-parameter
+        #lambdaval = 4
+        
+        args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
+        
+        # Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
+        
+        opts = {'maxiter': 50}  # Preferred value.
+        
+        nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
+        
+        # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
+        # and nnObjGradient. Check documentation for this function before you proceed.
+        # nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
+        
+        
+        # Reshape nnParams from 1D vector into w1 and w2 matrices
+        w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
+        w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+        
+        # Test the computed parameters
+        
+        predicted_label = nnPredict(w1, w2, train_data)
+        
+        # find the accuracy on Training Dataset
+        print('\n Final opt_val: ' + str(nn_params.fun))
+        
+        print("\n Training set Accuracy:" + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+        
+        predicted_label = nnPredict(w1, w2, validation_data)
+        
+        # find the accuracy on Validation Dataset
+        
+        print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
+        
+        predicted_label = nnPredict(w1, w2, test_data)
+        
+        # find the accuracy on Validation Dataset
+        
+        print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+        
+        stop = timeit.default_timer()
+        i=i+1
+        print('\n Time take for lambdaval: ' + str(lambdaval) + ' and number of hidden nodes:' + str (n_hidden) + 'is: ' + str(stop - start))
+        print('###############################################################################')
