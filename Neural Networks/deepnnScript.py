@@ -141,4 +141,4 @@ with tf.Session() as sess:
     
 stop = timeit.default_timer()
 
-print(str(stop - start))
+print('\n Time Taken: ' + str(stop - start))

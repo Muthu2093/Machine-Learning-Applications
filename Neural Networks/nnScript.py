@@ -5,7 +5,7 @@ from math import sqrt
 import math
 from sklearn.feature_selection import VarianceThreshold
 import timeit
-
+import pickle
 
 def initializeWeights(n_in, n_out):
     """
@@ -205,7 +205,7 @@ def nnObjFunction(params, *args):
     ## Feed Forward network
     output_HL = np.dot(w1,np.transpose(training_data))
     output_HL_Sigmoid = sigmoid(output_HL)
-    bias_hidden = np.ones([1,output_HL_Sigmoid.shape[1]])
+    bias_hidden = np.ones([1,np.shape(output_HL_Sigmoid)[1]])
     output_HL_Sigmoid = np.concatenate((output_HL_Sigmoid,bias_hidden),axis = 0)
     output_OL = np.dot(w2,output_HL_Sigmoid)
     output_OL_Sigmoid = sigmoid(output_OL)
@@ -213,18 +213,19 @@ def nnObjFunction(params, *args):
     ## Creating boolean labels with size k * n
     training_label_n = np.zeros([n_class, training_label.shape[0]])
     for i in range(0,len(training_label)):
-        training_label_n[int(training_label[i]), i ] = 1
+        training_label_n[int(training_label[i]), i] = 1
     
     ## Calculating error_function
     leftTerm =   training_label_n * np.log(output_OL_Sigmoid)  
-    rightTerm = (np.ones(training_label_n.shape)-training_label_n) * np.log(np.ones(output_OL_Sigmoid.shape)-output_OL_Sigmoid)
+    rightTerm = (np.ones(np.shape(training_label_n))-training_label_n) * np.log(np.ones(np.shape(output_OL_Sigmoid))-output_OL_Sigmoid)
     error_OL = leftTerm + rightTerm
     error_OL = -np.sum(error_OL)/training_data.shape[0]
     
-    ## Calculating gradients for w1 and w2
+    ## Calculating gradients for w1
     delta_OL = output_OL_Sigmoid - training_label_n
     grad_w2 = np.matmul(delta_OL, np.transpose(output_HL_Sigmoid))
     
+    ## Calculating gradients for w2
     leftTerm = np.dot(np.transpose(w2), delta_OL)
     rightTerm = output_HL_Sigmoid*(np.ones(output_HL_Sigmoid.shape) - output_HL_Sigmoid)
     grad_w1 =  np.dot(leftTerm*rightTerm, training_data)
@@ -276,12 +277,14 @@ def nnPredict(w1, w2, data):
 """**************Neural Network Script Starts here********************************"""
 
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
-lambda_range = np.array([0,5,10,15,20,25,30,35,40,45,50,55,60])
-hiddennodes_range = np.array([20])
-i = 1
+
+lambda_range = np.array([5])        ## Include values you want to test here
+hiddennodes_range = np.array([50])
+
+## loops used for training for differnt hyper parameters
 for lambdaval in lambda_range:
     for n_hidden in hiddennodes_range:
-        print(str(i)+'. ###############################################################################')
+        print('###############################################################################')
         start = timeit.default_timer()
         #  Train Neural Network
         
@@ -342,7 +345,14 @@ for lambdaval in lambda_range:
         
         print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
         
+        # Timer function to denote the time taken
         stop = timeit.default_timer()
         i=i+1
-        print('\n Time take for lambdaval: ' + str(lambdaval) + ' and number of hidden nodes:' + str (n_hidden) + 'is: ' + str(stop - start))
+        
+        print('\n Time take for lambdaval: ' + str(lambdaval) + ' and number of hidden nodes:' + str (n_hidden) + ' is: ' + str(stop - start))
         print('###############################################################################')
+
+
+#pickle_file = [selected_features, n_hidden, w1, w2, lambdaval]
+#pickle.dump( pickle_file, open( "save.p", "wb" ) )
+

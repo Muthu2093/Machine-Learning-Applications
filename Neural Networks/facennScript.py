@@ -5,6 +5,9 @@ Comparing single layer MLP with deep MLP (using TensorFlow)
 import numpy as np
 import pickle
 
+import timeit
+start = timeit.default_timer()
+
 # Do not change this
 def initializeWeights(n_in,n_out):
     """
@@ -221,3 +224,7 @@ print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == valida
 predicted_label = nnPredict(w1,w2,test_data)
 #find the accuracy on Validation Dataset
 print('\n Test set Accuracy:' +  str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+
+stop = timeit.default_timer()
+
+print('\n Time Taken:'+str(stop - start))
