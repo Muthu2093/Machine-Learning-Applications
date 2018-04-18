@@ -277,7 +277,7 @@ def nnPredict(w1, w2, data):
 
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
 lambda_range = np.array([0,5,10,15,20,25,30,35,40,45,50,55,60])
-hiddennodes_range = np.array([200])
+hiddennodes_range = np.array([20])
 i = 1
 for lambdaval in lambda_range:
     for n_hidden in hiddennodes_range:

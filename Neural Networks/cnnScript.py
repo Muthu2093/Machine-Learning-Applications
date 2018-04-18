@@ -5,6 +5,9 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 import time
 from datetime import timedelta
+import timeit 
+
+start = timeit.default_timer()
 
 tf.__version__
 
@@ -418,8 +421,9 @@ optimize(num_iterations=9000)
 print_test_accuracy(show_example_errors=False)
 session.close()
 
+stop = timeit.default_timer()
 
-
+print(str(stop - start))
 
 
 
