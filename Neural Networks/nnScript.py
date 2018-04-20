@@ -354,5 +354,5 @@ for lambdaval in lambda_range:
 
 
 #pickle_file = [selected_features, n_hidden, w1, w2, lambdaval]
-#pickle.dump( pickle_file, open( "save.p", "wb" ) )
+#pickle.dump( pickle_file, open( "params.pickle", "wb" ) )
 
