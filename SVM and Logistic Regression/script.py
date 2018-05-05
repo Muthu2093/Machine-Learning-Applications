@@ -113,6 +113,17 @@ def blrObjFunction(initialWeights, *args):
     # Include bias in training data
     train_data = np.append(np.ones([n_data,1]),train_data,axis=1)
 
+    theta = sigmoid(np.dot(initialWeights.reshape([1, n_features+1]), np.transpose(train_data)))
+    
+    LeftTerm = np.dot(np.log(theta),labeli)
+    
+    RightTerm = np.dot(np.log(np.ones(theta.shape) - theta),(np.ones(labeli.shape) - labeli))
+    
+    error = (-1/n_data) * (LeftTerm + RightTerm)
+    
+    error = sum(error)
+    print(error)
+    error_grad = (1/n_data) * np.reshape((np.dot(np.transpose(train_data), (np.transpose(theta) - labeli))),[716])
     ##################
     # YOUR CODE HERE #
     ##################
@@ -137,7 +148,10 @@ def blrPredict(W, data):
 
     """
     label = np.zeros((data.shape[0], 1))
-
+    
+    posterior = sigmoid(np.dot(data, W[1:len(W)]))
+    for i in range(0,data.shape[0]):
+        label[i] = np.where(posterior[i,:] == np.max(posterior[i,:]))
     ##################
     # YOUR CODE HERE #
     ##################
@@ -191,6 +205,7 @@ def mlrPredict(W, data):
 
     """
     label = np.zeros((data.shape[0], 1))
+    #W = 
 
     ##################
     # YOUR CODE HERE #
@@ -228,6 +243,7 @@ for i in range(n_class):
     nn_params = minimize(blrObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
     W[:, i] = nn_params.x.reshape((n_feature + 1,))
 
+print("\n\n--------Binomail LR -----------")
 # Find the accuracy on Training Dataset
 predicted_label = blrPredict(W, train_data)
 print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
