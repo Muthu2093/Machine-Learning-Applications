@@ -123,10 +123,6 @@ def blrObjFunction(initialWeights, *args):
     print(error)
     
     error_grad = (1/n_data) * np.reshape((np.dot(np.transpose(train_data), (np.transpose(theta) - labeli))),[716])
-    ##################
-    # YOUR CODE HERE #
-    ##################
-    # HINT: Do not forget to add the bias term to your input data
 
     return error, error_grad
 
@@ -144,20 +140,20 @@ def blrPredict(W, data):
      Output: 
          label: vector of size N x 1 representing the predicted label of 
          corresponding feature vector given in data matrix
+
     """
-    label = np.zeros((data.shape[0],1));
+    ## Adding bias term to input data
+    data = np.append(np.ones([data.shape[0],1]),data,axis=1)
+    label = np.zeros((data.shape[0], 1))
     
-    data = np.append(data,np.zeros([len(data),1]),1)
-    n=data.shape[0]
+    ## Calculation Posterior
+    posterior = np.exp(np.dot(data, W))
+    posterior = posterior / np.reshape(sum(np.transpose(posterior)),[data.shape[0],1]) # check about np.sum
     
-    outPut_intermediate=np.dot(data,W.T);
-          
-    outPut=sigmoid(outPut_intermediate);    
-    
-    for i in range(n):
-        index=np.argmax(outPut[i]);
-        label=np.append(label,index);
-      
+    ## Extracting label of Maximum Posterior
+    for i in range(0,data.shape[0]):
+        label[i] = np.where(posterior[i,:] == np.max(posterior[i,:]))
+
     return label
 
 
@@ -211,12 +207,6 @@ def mlrObjFunction(params, *args):
     print(error)
     
     error_grad = np.dot(np.transpose(train_data), (theta - labeli)) / (labeli.shape[0]*labeli.shape[1])
-    
-
-    ##################
-    # YOUR CODE HERE #
-    ##################
-    # HINT: Do not forget to add the bias term to your input data
 
     return error, error_grad.reshape([(n_feature+1)*n_class])
 
@@ -236,18 +226,17 @@ def mlrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
+    ## Adding bias term to input data
+    data = np.append(np.ones([data.shape[0],1]),data,axis=1)
     label = np.zeros((data.shape[0], 1))
     
-    posterior = np.exp(np.dot(data, W[1:len(W)]))
+    ## Calculation Posterior
+    posterior = np.exp(np.dot(data, W))
     posterior = posterior / np.reshape(sum(np.transpose(posterior)),[data.shape[0],1]) # check about np.sum
     
+    ## Extracting label of Maximum Posterior
     for i in range(0,data.shape[0]):
         label[i] = np.where(posterior[i,:] == np.max(posterior[i,:]))
-
-    ##################
-    # YOUR CODE HERE #
-    ##################
-    # HINT: Do not forget to add the bias term to your input data
 
     return label
 
