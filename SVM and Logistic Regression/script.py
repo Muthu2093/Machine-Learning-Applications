@@ -144,18 +144,20 @@ def blrPredict(W, data):
      Output: 
          label: vector of size N x 1 representing the predicted label of 
          corresponding feature vector given in data matrix
-
     """
-    label = np.zeros((data.shape[0], 1))
+    label = np.zeros((data.shape[0],1));
     
-    posterior = sigmoid(np.dot(data, W[1:len(W)]))
-    for i in range(0,data.shape[0]):
-        label[i] = np.where(posterior[i,:] == np.max(posterior[i,:]))
-    ##################
-    # YOUR CODE HERE #
-    ##################
-    # HINT: Do not forget to add the bias term to your input data
-
+    data = np.append(data,np.zeros([len(data),1]),1)
+    n=data.shape[0]
+    
+    outPut_intermediate=np.dot(data,W.T);
+          
+    outPut=sigmoid(outPut_intermediate);    
+    
+    for i in range(n):
+        index=np.argmax(outPut[i]);
+        label=np.append(label,index);
+      
     return label
 
 
@@ -237,7 +239,7 @@ def mlrPredict(W, data):
     label = np.zeros((data.shape[0], 1))
     
     posterior = np.exp(np.dot(data, W[1:len(W)]))
-    posterior = posterior / sum(posterior) # check about np.sum
+    posterior = posterior / np.reshape(sum(np.transpose(posterior)),[data.shape[0],1]) # check about np.sum
     
     for i in range(0,data.shape[0]):
         label[i] = np.where(posterior[i,:] == np.max(posterior[i,:]))
@@ -267,6 +269,10 @@ n_feature = train_data.shape[1]
 Y = np.zeros((n_train, n_class))
 for i in range(n_class):
     Y[:, i] = (train_label == i).astype(int).ravel()
+    
+"""
+Script for Binomial Logistic Regression
+"""
 
 # Logistic Regression with Gradient Descent
 #W = np.zeros((n_feature + 1, n_class))
@@ -365,22 +371,22 @@ Flag = True
 
 ## For Radial bias with varying values of C
 print('\n **** Radial Bias SVM with varying C values ****\n') ## gamma = default
-
-C = [50, 60, 70, 80, 90, 100]
-for c in C:
-    [Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, c, Flag)
-    #Accuracy_List.append(["Radial","Gamme:default",str(c),"Training_Accuracy:" + Accuracy_train, "Validation_Accuracy:" + Accuracy_validation, "Test_Accuracy:" + Accuracy_test])
-    print('C value: ' + str(c))
-    print("Accuracy of train data in SVM: " +str(Accuracy_train))    
-    print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
-    print("Accuracy of test data in SVM: " +str(Accuracy_test))
-
-
-file  = open("output.csv",'w+')
-for line in Accuracy_List:
-    file.write("\n" + str(line))
-
-file.close()
+#
+#C = [50, 60, 70, 80, 90, 100]
+#for c in C:
+#    [Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, c, Flag)
+#    #Accuracy_List.append(["Radial","Gamme:default",str(c),"Training_Accuracy:" + Accuracy_train, "Validation_Accuracy:" + Accuracy_validation, "Test_Accuracy:" + Accuracy_test])
+#    print('C value: ' + str(c))
+#    print("Accuracy of train data in SVM: " +str(Accuracy_train))    
+#    print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
+#    print("Accuracy of test data in SVM: " +str(Accuracy_test))
+#
+#
+#file  = open("output.csv",'w+')
+#for line in Accuracy_List:
+#    file.write("\n" + str(line))
+#
+#file.close()
 
 ##################
 # Multinomail Logistic Regression Code Begins here
