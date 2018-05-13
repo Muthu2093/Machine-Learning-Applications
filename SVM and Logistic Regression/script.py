@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.io import loadmat
 from scipy.optimize import minimize
-
+from matplotlib import pyplot as plt
+import pandas as pd
+import seaborn as sn
 from sklearn.svm import SVC
 
 
@@ -112,17 +114,22 @@ def blrObjFunction(initialWeights, *args):
     error = 0
     error_grad = np.zeros((n_features + 1, 1))
     
-    # Include bias in training data
+    # Including bias term in training data
     train_data = np.append(np.ones([n_data,1]),train_data,axis=1)
 
+    # Estimating posterior
     theta = sigmoid(np.dot(initialWeights.reshape([1, n_features+1]), np.transpose(train_data)))
     LeftTerm = np.dot(np.log(theta),labeli)
     RightTerm = np.dot(np.log(np.ones(theta.shape) - theta),(np.ones(labeli.shape) - labeli))
+    
+    # Estimating error
     error = (-1/n_data) * (LeftTerm + RightTerm)
     error = sum(error)
-    print(error)
+    print(error) # uncomment line to visualize gradient descent
     
-    error_grad = (1/n_data) * np.reshape((np.dot(np.transpose(train_data), (np.transpose(theta) - labeli))),[716])
+    
+    # Estimating gradients
+    error_grad = (1/n_data) * np.reshape((np.dot(np.transpose(train_data), (np.transpose(theta) - labeli))),n_features + 1)
 
     return error, error_grad
 
@@ -142,11 +149,11 @@ def blrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
-    ## Adding bias term to input data
+    ## Including bias term to input data
     data = np.append(np.ones([data.shape[0],1]),data,axis=1)
     label = np.zeros((data.shape[0], 1))
     
-    ## Calculation Posterior
+    ## Estimating Posterior
     posterior = np.exp(np.dot(data, W))
     posterior = posterior / np.reshape(sum(np.transpose(posterior)),[data.shape[0],1]) # check about np.sum
     
@@ -183,32 +190,25 @@ def mlrObjFunction(params, *args):
     
     initialWeights = params.reshape([n_feature + 1, n_class])
     
-    # Include bias in training data
+    # Including bias in training data
     train_data = np.append(np.ones([n_data,1]),train_data,axis=1)
 
+    # Estimating posterior 
     theta = np.dot(train_data, initialWeights)
     theta = np.exp(theta)
-    theta = theta / np.reshape(sum(np.transpose(theta)),[50000,1]) # check about np.sum
+    theta = theta / np.reshape(sum(np.transpose(theta)),[n_data,1]) # check about np.sum
     
-    #theta = np.zeros([10,50000])
-    #for i in range(0,10):
-    #    theta[i,:] = np.reshape(np.exp(np.dot(train_data, np.reshape(initialWeights[:,i],[716,1]))), [50000])
+    # Estimating error
+    error =  np.dot(np.transpose(labeli),np.log(theta))
+    error =  - np.sum(np.diagonal(error))
+    error = error/(labeli.shape[0]*labeli.shape[1])
+    print(error) # - uncomment to visualize the gradient descent
     
-    #for i in range(0,10):
-    #    theta[i,:] = theta[i,:]/sum(theta)
-        
-    #theta = np.transpose(theta)
-
-    #error =  np.dot(np.transpose(labeli),np.log(theta))
-    #error =  - np.sum(np.diagonal(error))
-    #error = error/(labeli.shape[0]*labeli.shape[1])
-    
-    error = - (np.sum(labeli * theta) * n_data**-1)
-    print(error)
-    
+    # Estimating gradients
     error_grad = np.dot(np.transpose(train_data), (theta - labeli)) / (labeli.shape[0]*labeli.shape[1])
-
-    return error, error_grad.reshape([(n_feature+1)*n_class])
+    error_grad = error_grad.reshape([(n_feature+1)*n_class])
+    
+    return error, error_grad
 
 
 def mlrPredict(W, data):
@@ -240,6 +240,24 @@ def mlrPredict(W, data):
 
     return label
 
+def confusionMatrix(label, predict):
+    CF = np.zeros([10,10])
+    
+    for i in range(0,len(label)):
+        CF[int(label[i]),int(predict[i])] += 1
+        
+    classAccuracy = np.zeros(10)
+    for i in range (0,10):
+        classAccuracy[i]= CF[i,i] * 100/ np.sum(CF[i,:])
+    
+    CF = CF.astype(int)
+    df_cm = pd.DataFrame(CF.astype(int), index = [i for i in "0123456789"],
+                  columns = [i for i in "0123456789"])
+    plt.figure(figsize = (10,7))
+    sn.heatmap(df_cm, annot=True)
+    
+    return CF, classAccuracy
+
 
 """
 Script for Logistic Regression
@@ -259,32 +277,33 @@ Y = np.zeros((n_train, n_class))
 for i in range(n_class):
     Y[:, i] = (train_label == i).astype(int).ravel()
     
+Accuracy_List = []
+    
 """
 Script for Binomial Logistic Regression
 """
+W = np.zeros((n_feature + 1, n_class))
+initialWeights = np.zeros((n_feature + 1, 1))
+opts = {'maxiter': 100}
+for i in range(n_class):
+    labeli = Y[:, i].reshape(n_train, 1)
+    args = (train_data, labeli)
+    nn_params = minimize(blrObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
+    W[:, i] = nn_params.x.reshape((n_feature + 1,))
 
-# Logistic Regression with Gradient Descent
-#W = np.zeros((n_feature + 1, n_class))
-#initialWeights = np.zeros((n_feature + 1, 1))
-#opts = {'maxiter': 100}
-#for i in range(n_class):
-#    labeli = Y[:, i].reshape(n_train, 1)
-#    args = (train_data, labeli)
-#    nn_params = minimize(blrObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
-#    W[:, i] = nn_params.x.reshape((n_feature + 1,))
-#
-#print("\n\n--------Binomail LR -----------")
-## Find the accuracy on Training Dataset
-#predicted_label = blrPredict(W, train_data)
-#print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
-#
-## Find the accuracy on Validation Dataset
-#predicted_label = blrPredict(W, validation_data)
-#print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
-#
-## Find the accuracy on Testing Dataset
-#predicted_label = blrPredict(W, test_data)
-#print('\n Testing set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+print("\n\n--------Binomail LR -----------")
+# Find the accuracy on Training Dataset
+predicted_label = blrPredict(W, train_data)
+print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+
+# Find the accuracy on Validation Dataset
+predicted_label = blrPredict(W, validation_data)
+print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
+
+# Find the accuracy on Testing Dataset
+predicted_label = blrPredict(W, test_data)
+print('\n Testing set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+
 
 """
 Script for Support Vector Machine
@@ -301,19 +320,12 @@ def SVM(train_data, train_label, validation_data, validation_label, test_data, t
     
     if (flag == False):
         svmModel = SVC(C = c, kernel = KERNEL, gamma = 1.0, verbose = False, cache_size = 1500)
-    else:
+    if (flag == True):
         svmModel = SVC(C = c, kernel = KERNEL, verbose = False , cache_size = 1500)
     
-    #print('\n **** Fitting model on training data ****\n')
     svmModel.fit(train_data, train_label)
-    
-    #print('\n **** Predicting model on training data ****\n')
     train_predicted = svmModel.predict(train_data)
-    
-    #print('\n **** Predicting model on validation data ****\n')
     validation_predicted = svmModel.predict(validation_data)
-    
-    #print('\n **** Predicting model on test data ****\n')
     test_predicted = svmModel.predict(test_data)
     
     Accuracy_train = np.count_nonzero(np.logical_and(train_label, train_predicted.reshape([train_predicted.shape[0],1])))/ train_data.shape[0]
@@ -326,16 +338,15 @@ def SVM(train_data, train_label, validation_data, validation_label, test_data, t
 print('\n **** SVM with linear kernel ****\n')
 Flag = True
 KERNEL = 'linear'
-Accuracy_List = []
+
 #[Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, 1.0, Flag)
-#
 #print("Accuracy of train data in SVM: " +str(Accuracy_train))
 #print("Accuracy of validation data in SVM: " +str(Accuracy_validation))
 #print("Accuracy of test data in SVM: " +str(Accuracy_test))
-#Accuracy_List.append(["Linear","Gamme:default","c=1.0","Training_Accuracy:" + Accuracy_train, "Validation_Accuracy:" + Accuracy_validation, "Test_Accuracy:" + Accuracy_test])
-# For Radial bias Kernel with Gamma =1
-#print('\n **** SVM with linear kernel ****\n')
+#Accuracy_List.append(["Linear","Gamme = default","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
 
+
+#For Radial bias Kernel with Gamma =1
 KERNEL = 'rbf'
 GAMMA = 1.0
 Flag = False
@@ -343,28 +354,28 @@ Flag = False
 print('\n **** Radial Bias SVM with gamma = 1 ****\n') ## gamma = 1
 
 #[Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, 1.0, Flag)
-#Accuracy_List.append(["Radial","Gamme:default","c=1.0","Training_Accuracy:" + Accuracy_train, "Validation_Accuracy:" + Accuracy_validation, "Test_Accuracy:" + Accuracy_test])
+#Accuracy_List.append(["Radial","Gamme = default","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
 #print("Accuracy of train data in SVM: " +str(Accuracy_train))    
 #print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
 #print("Accuracy of test data in SVM: " +str(Accuracy_test))
 
 
 ## For Radial bias Kernel with Gamma = default('auto')
-print('\n **** Radial Bias SVM with Default Gamma setting ****\n') ## gamma = default
-Flag = True
+#print('\n **** Radial Bias SVM with Default Gamma setting ****\n') ## gamma = default
+#Flag = True
 #[Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, 1.0, Flag)
-#Accuracy_List.append(["Radial","Gamme:1.0","c=1.0","Training_Accuracy:" + Accuracy_train, "Validation_Accuracy:" + Accuracy_validation, "Test_Accuracy:" + Accuracy_test])
+#Accuracy_List.append(["Radial","Gamme = 1.0","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
 #print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
 #print("Accuracy of test data in SVM: " +str(Accuracy_test))
 
 
 ## For Radial bias with varying values of C
-print('\n **** Radial Bias SVM with varying C values ****\n') ## gamma = default
-#
-#C = [50, 60, 70, 80, 90, 100]
+#print('\n **** Radial Bias SVM with varying C values ****\n') ## gamma = default
+#Flag = True;
+#C = [1.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
 #for c in C:
 #    [Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, c, Flag)
-#    #Accuracy_List.append(["Radial","Gamme:default",str(c),"Training_Accuracy:" + Accuracy_train, "Validation_Accuracy:" + Accuracy_validation, "Test_Accuracy:" + Accuracy_test])
+#    Accuracy_List.append(["Radial","Gamme:default","c = " + str(c),"Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
 #    print('C value: ' + str(c))
 #    print("Accuracy of train data in SVM: " +str(Accuracy_train))    
 #    print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
@@ -386,7 +397,7 @@ print('\n\n--------------Multimomial Logistic Regression-------------------\n\n'
 """
 Script for Extra Credit Part
 """
-# FOR EXTRA CREDIT ONLY
+## FOR EXTRA CREDIT ONLY
 W_b = np.zeros((n_feature + 1, n_class))
 initialWeights_b = np.zeros((n_feature + 1, n_class))
 opts_b = {'maxiter': 100}
