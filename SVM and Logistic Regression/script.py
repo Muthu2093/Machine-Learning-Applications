@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sn
 from sklearn.svm import SVC
-
+import timeit
 
 def preprocess():
     """ 
@@ -126,7 +126,6 @@ def blrObjFunction(initialWeights, *args):
     error = (-1/n_data) * (LeftTerm + RightTerm)
     error = sum(error)
     print(error) # uncomment line to visualize gradient descent
-    
     
     # Estimating gradients
     error_grad = (1/n_data) * np.reshape((np.dot(np.transpose(train_data), (np.transpose(theta) - labeli))),n_features + 1)
@@ -249,7 +248,7 @@ def confusionMatrix(label, predict):
     classAccuracy = np.zeros(10)
     for i in range (0,10):
         classAccuracy[i]= CF[i,i] * 100/ np.sum(CF[i,:])
-    
+    print("Confusion Matrix:")
     CF = CF.astype(int)
     df_cm = pd.DataFrame(CF.astype(int), index = [i for i in "0123456789"],
                   columns = [i for i in "0123456789"])
@@ -262,6 +261,9 @@ def confusionMatrix(label, predict):
 """
 Script for Logistic Regression
 """
+
+start = timeit.default_timer()
+
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
 
 # number of classes
@@ -278,7 +280,7 @@ for i in range(n_class):
     Y[:, i] = (train_label == i).astype(int).ravel()
     
 Accuracy_List = []
-    
+
 """
 Script for Binomial Logistic Regression
 """
@@ -303,7 +305,11 @@ print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == vali
 # Find the accuracy on Testing Dataset
 predicted_label = blrPredict(W, test_data)
 print('\n Testing set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+[confMat_BLR, ClassAccBLR] = confusionMatrix(test_label, predicted_label)
 
+stop = timeit.default_timer()
+time = stop - start
+print ("Time Taken = " + str(time) +" seconds")
 
 """
 Script for Support Vector Machine
@@ -315,78 +321,114 @@ Script for Support Vector Machine
 ##################
 
 print('\n\n--------------SVM-------------------\n\n')
-
-def SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, c, flag):
-    
-    if (flag == False):
-        svmModel = SVC(C = c, kernel = KERNEL, gamma = 1.0, verbose = False, cache_size = 1500)
-    if (flag == True):
-        svmModel = SVC(C = c, kernel = KERNEL, verbose = False , cache_size = 1500)
-    
-    svmModel.fit(train_data, train_label)
-    train_predicted = svmModel.predict(train_data)
-    validation_predicted = svmModel.predict(validation_data)
-    test_predicted = svmModel.predict(test_data)
-    
-    Accuracy_train = np.count_nonzero(np.logical_and(train_label, train_predicted.reshape([train_predicted.shape[0],1])))/ train_data.shape[0]
-    Accuracy_validation = np.count_nonzero(np.logical_and(validation_label, validation_predicted.reshape([validation_predicted.shape[0],1])))/ validation_data.shape[0]
-    Accuracy_test = np.count_nonzero(np.logical_and(test_label, test_predicted.reshape([test_predicted.shape[0],1])))/ test_data.shape[0]
-    
-    return Accuracy_train,Accuracy_validation, Accuracy_test
-
 ## For Linear Kernel
 print('\n **** SVM with linear kernel ****\n')
-Flag = True
-KERNEL = 'linear'
 
-#[Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, 1.0, Flag)
-#print("Accuracy of train data in SVM: " +str(Accuracy_train))
-#print("Accuracy of validation data in SVM: " +str(Accuracy_validation))
-#print("Accuracy of test data in SVM: " +str(Accuracy_test))
-#Accuracy_List.append(["Linear","Gamme = default","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
+start = timeit.default_timer()
+svmModel = SVC(kernel = "linear")
+svmModel.fit(train_data, train_label)
+#train_predicted = svmModel.predict(train_data)
+#validation_predicted = svmModel.predict(validation_data)
+#test_predicted = svmModel.predict(test_data)
+    
+Accuracy_train = svmModel.score(train_data,train_label)
+Accuracy_validation = svmModel.score(validation_data,validation_label)
+Accuracy_test = svmModel.score(test_data, test_label)
+  
+print("Accuracy of train data in SVM: " +str(Accuracy_train))
+print("Accuracy of validation data in SVM: " +str(Accuracy_validation))
+print("Accuracy of test data in SVM: " +str(Accuracy_test))
+Accuracy_List.append(["Linear","Gamme = default","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
+
+stop = timeit.default_timer()
+time = stop - start
+print ("Time Taken = " + str(time) +" seconds")
+
 
 
 #For Radial bias Kernel with Gamma =1
-KERNEL = 'rbf'
-GAMMA = 1.0
-Flag = False
+start = timeit.default_timer()
 
 print('\n **** Radial Bias SVM with gamma = 1 ****\n') ## gamma = 1
+svmModel = SVC(kernel = "rbf", gamma = 1)
+svmModel.fit(train_data, train_label)
+#train_predicted = svmModel.predict(train_data)
+#validation_predicted = svmModel.predict(validation_data)
+#test_predicted = svmModel.predict(test_data)
+    
+Accuracy_train = svmModel.score(train_data,train_label)
+Accuracy_validation = svmModel.score(validation_data,validation_label)
+Accuracy_test = svmModel.score(test_data, test_label)
+  
+Accuracy_List.append(["Radial","Gamme = default","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
+print("Accuracy of train data in SVM: " +str(Accuracy_train))    
+print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
+print("Accuracy of test data in SVM: " +str(Accuracy_test))
 
-#[Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, 1.0, Flag)
-#Accuracy_List.append(["Radial","Gamme = default","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
-#print("Accuracy of train data in SVM: " +str(Accuracy_train))    
-#print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
-#print("Accuracy of test data in SVM: " +str(Accuracy_test))
+stop = timeit.default_timer()
+time = stop - start
 
 
-## For Radial bias Kernel with Gamma = default('auto')
-#print('\n **** Radial Bias SVM with Default Gamma setting ****\n') ## gamma = default
-#Flag = True
-#[Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, 1.0, Flag)
-#Accuracy_List.append(["Radial","Gamme = 1.0","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
-#print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
-#print("Accuracy of test data in SVM: " +str(Accuracy_test))
+
+
+### For Radial bias Kernel with Gamma = default('auto')
+print('\n **** Radial Bias SVM with Default Gamma setting ****\n') ## gamma = default
+start = timeit.default_timer()
+svmModel = SVC(kernel = "rbf")
+svmModel.fit(train_data, train_label)
+#train_predicted = svmModel.predict(train_data)
+#validation_predicted = svmModel.predict(validation_data)
+#test_predicted = svmModel.predict(test_data)
+    
+Accuracy_train = svmModel.score(train_data,train_label)
+Accuracy_validation = svmModel.score(validation_data,validation_label)
+Accuracy_test = svmModel.score(test_data, test_label) 
+
+Accuracy_List.append(["Radial","Gamme = 1.0","c = 1.0","Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
+print("Accuracy of train data in SVM: " +str(Accuracy_train))    
+print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
+print("Accuracy of test data in SVM: " +str(Accuracy_test))
+
+
+stop = timeit.default_timer()
+time = stop - start
+print ("Time Taken = " + str(time) +" seconds")
+
+
 
 
 ## For Radial bias with varying values of C
-#print('\n **** Radial Bias SVM with varying C values ****\n') ## gamma = default
-#Flag = True;
-#C = [1.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
-#for c in C:
-#    [Accuracy_train, Accuracy_validation, Accuracy_test] = SVM(train_data, train_label, validation_data, validation_label, test_data, test_label, KERNEL, c, Flag)
-#    Accuracy_List.append(["Radial","Gamme:default","c = " + str(c),"Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
-#    print('C value: ' + str(c))
-#    print("Accuracy of train data in SVM: " +str(Accuracy_train))    
-#    print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
-#    print("Accuracy of test data in SVM: " +str(Accuracy_test))
-#
-#
-#file  = open("output.csv",'w+')
-#for line in Accuracy_List:
-#    file.write("\n" + str(line))
-#
-#file.close()
+print('\n **** Radial Bias SVM with varying C values ****\n') ## gamma = default
+Flag = True;
+C = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
+for c in C:
+    start = timeit.default_timer()
+    svmModel = SVC(C = c, kernel = "rbf")
+    svmModel.fit(train_data, train_label)
+    #train_predicted = svmModel.predict(train_data)
+    #validation_predicted = svmModel.predict(validation_data)
+    #test_predicted = svmModel.predict(test_data)
+    
+    Accuracy_train = svmModel.score(train_data,train_label)
+    Accuracy_validation = svmModel.score(validation_data,validation_label)
+    Accuracy_test = svmModel.score(test_data, test_label)
+  
+    Accuracy_List.append(["Radial","Gamme:default","c = " + str(c),"Training_Accuracy:" + str(Accuracy_train), "Validation_Accuracy:" + str(Accuracy_validation), "Test_Accuracy:" + str(Accuracy_test)])
+    print('C value: ' + str(c))
+    print("Accuracy of train data in SVM: " +str(Accuracy_train))    
+    print("Accuracy of validation data in SVM: " +str(Accuracy_validation))    
+    print("Accuracy of test data in SVM: " +str(Accuracy_test))
+    stop = timeit.default_timer()
+    time = stop - start
+    print ("Time Taken = " + str(time) +" seconds")
+
+file  = open("output.csv",'w+')
+for line in Accuracy_List:
+    file.write("\n" + str(line))
+
+file.close()
+
+
 
 ##################
 # Multinomail Logistic Regression Code Begins here
@@ -394,6 +436,7 @@ print('\n **** Radial Bias SVM with gamma = 1 ****\n') ## gamma = 1
 
 print('\n\n--------------Multimomial Logistic Regression-------------------\n\n')
 
+start = timeit.default_timer()
 """
 Script for Extra Credit Part
 """
@@ -416,4 +459,10 @@ print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label_b == va
 
 # Find the accuracy on Testing Dataset
 predicted_label_b = mlrPredict(W_b, test_data)
+
 print('\n Testing set Accuracy:' + str(100 * np.mean((predicted_label_b == test_label).astype(float))) + '%')
+stop = timeit.default_timer()
+time = stop - start
+print ("Time Taken = " + str(time) +" seconds")
+
+[confMat_MLR, ClassAccMLR] = confusionMatrix(test_label, predicted_label_b)
